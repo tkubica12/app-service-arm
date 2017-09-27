@@ -47,7 +47,7 @@ sudo openssl pkcs12 -inkey /etc/letsencrypt/live/tomasweb01.azure.tomaskubica.cz
 az group deployment create --resource-group appservicearm --template-file web4.json --parameters @web4.parameters.json --mode Complete
 ```
 
-## Refactor to support multiple sites (web06)
+## Refactor to support multiple sites (web05)
 We will be deploying multiple sites from single desired state template and we need to refactor. Parameters will be provided in a way to support multiple sites and we will use copy function in ARM to create multiple instances of resources.
 
 ```
