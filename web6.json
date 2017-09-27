@@ -1,0 +1,176 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serviceplan_name": {
+            "type": "String"
+        },
+        "db_server": {
+            "type": "string"
+        },
+        "db_admin_login": {
+            "type": "securestring"
+        },
+        "db_admin_password": {
+            "type": "securestring"
+        },
+        "db_pool_name": {
+            "type": "string"
+        },
+        "db_pool_dtu": {
+            "type": "int"
+        },
+        "db_edition": {
+            "type": "string",
+			"allowedValues": [
+				"Basic",
+				"Standard",
+				"Premium"
+			]
+        },
+        "db_min_dtu": {
+            "type": "int"
+        },
+        "db_max_dtu": {
+            "type": "int"
+        },
+        "sitesobject": {
+            "type": "secureObject"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "name": "[parameters('serviceplan_name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('sitesobject').sites[copyIndex()].site_name]",
+            "copy": {
+                "name": "sites",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+            "apiVersion": "2016-08-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/staging')]",
+            "copy": {
+                "name": "stagingslots",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+            "apiVersion": "2016-08-01",
+            "location": "West Europe",
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/test')]",
+            "copy": {
+                "name": "testslots",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+            "apiVersion": "2016-08-01",
+            "location": "West Europe",
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/', parameters('sitesobject').sites[copyIndex()].domain)]",
+            "copy": {
+                "name": "domains",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+            "apiVersion": "2016-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "siteName": "[parameters('sitesobject').sites[copyIndex()].site_name]",
+                "hostNameType": "Verified",
+                "customHostNameDnsRecordType": "CName",
+                "sslState": "SniEnabled",
+                "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', parameters('sitesobject').sites[copyIndex()].site_name), providers('Microsoft.Web', 'certificates').apiVersions[0]).thumbprint]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]"
+            ]
+        },
+        {
+            "type":"Microsoft.Web/certificates",
+            "name":"[parameters('sitesobject').sites[copyIndex()].site_name]",
+            "copy": {
+                "name": "certificates",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+            "apiVersion":"2016-03-01",
+            "location":"[resourceGroup().location]",
+            "properties":{
+                "pfxBlob": "[parameters('sitesobject').sites[copyIndex()].certificatePfxBase64]",
+                "password": "[parameters('sitesobject').sites[copyIndex()].certificatePfxPassword]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers",
+			"name": "[parameters('db_server')]",
+			"apiVersion": "2014-04-01-preview",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"administratorLogin": "[parameters('db_admin_login')]",
+				"administratorLoginPassword": "[parameters('db_admin_password')]",
+				"version": "12.0"
+			}
+        },
+        {
+            "type": "Microsoft.Sql/servers/elasticpools",
+            "name": "[concat(parameters('db_server'), '/', parameters('db_pool_name'))]",
+			"apiVersion": "2014-04-01-preview",
+			"location": "[resourceGroup().location]",
+			"properties": {
+                "edition": "[parameters('db_edition')]",
+				"dtu": "[parameters('db_pool_dtu')]",
+				"databaseDtuMin": "[parameters('db_min_dtu')]",
+				"databaseDtuMax": "[parameters('db_max_dtu')]"
+			},
+            "dependsOn": [
+                "[concat('Microsoft.Sql/servers/', parameters('db_server'))]"
+            ]
+		}
+    ]
+}

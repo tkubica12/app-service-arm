@@ -58,6 +58,9 @@ az group deployment create --resource-group appservicearm --template-file web5.j
 ## Add SQL DB in elastic pool and push connection string to web site (web07)
 Currently ARM does not support creating additional DB user accounts. Only user on DB server level is supported. In case of individual databases we could create individual DB server object for each site, but in out case we need to leverage elastic pools. Therefore we deploy database with master password and configure App Service with connection string with individual DB login as provided in parameters file. Actual creation of per-DB user login will be then handled by separate script outside of ARM template.
 
+```
+az group deployment create --resource-group appservicearm --template-file web6.json --parameters @web6.parameters.json --mode Complete
+```
 
 
 ## Clean up
