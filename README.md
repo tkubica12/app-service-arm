@@ -62,7 +62,6 @@ Currently ARM does not support creating additional DB user accounts. Only user o
 az group deployment create --resource-group appservicearm --template-file web6.json --parameters @web6.parameters.json --mode Complete
 ```
 
-TODO: firewall rules
 TODO: script to create DB passwords
 
 ## Clean up
