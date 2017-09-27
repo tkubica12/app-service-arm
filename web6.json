@@ -68,6 +68,22 @@
                 "enabled": true,
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             },
+            "resources": [
+                {  
+                    "apiVersion":"2015-04-01",
+                    "name":"connectionstrings",
+                    "type":"config",
+                    "dependsOn":[  
+                        "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]"                      
+                    ],
+                    "properties":{  
+                       "defaultConnection":{  
+                          "value":"[concat('Server=tcp:',parameters('db_server'),'.database.windows.net,1433;Initial Catalog=',parameters('sitesobject').sites[copyIndex()].db_name,';Persist Security Info=False;User ID=', parameters('sitesobject').sites[copyIndex()].db_login,';Password=',parameters('sitesobject').sites[copyIndex()].db_password,';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+                          "type":"SQLAzure"
+                       }
+                    }
+                 }
+            ],
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             ]
@@ -171,6 +187,25 @@
             "dependsOn": [
                 "[concat('Microsoft.Sql/servers/', parameters('db_server'))]"
             ]
+        },
+        {
+			"type": "Microsoft.Sql/servers/databases",
+			"name": "[concat(parameters('db_server'), '/', parameters('sitesobject').sites[copyIndex()].db_name)]",
+            "copy": {
+                "name": "databases",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
+			"location": "[resourceGroup().location]",
+			"apiVersion": "2014-04-01-preview",
+			"dependsOn": [
+				"[concat('Microsoft.Sql/servers/', parameters('db_server'))]",
+				"[concat('Microsoft.Sql/servers/', parameters('db_server') ,'/elasticpools/', parameters('db_pool_name'))]"
+			],
+			"properties": {
+				"collation": "[parameters('sitesobject').sites[copyIndex()].db_collation]",
+				"requestedServiceObjectiveName": "ElasticPool",
+				"elasticPoolName": "[parameters('db_pool_name')]"
+			}
 		}
     ]
 }
