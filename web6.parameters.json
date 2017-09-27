@@ -29,6 +29,12 @@
         "db_max_dtu": {
             "value": 10
         },
+        "db_firewall": {
+            "value": [
+                "90.181.122.97",
+                "1.2.3.4"
+            ]
+        },
         "sitesobject": {
             "value": {
                 "sites": [

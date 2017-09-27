@@ -34,6 +34,9 @@
         "db_max_dtu": {
             "type": "int"
         },
+        "db_firewall": {
+            "type": "array"
+        },
         "sitesobject": {
             "type": "secureObject"
         }
@@ -171,7 +174,39 @@
 				"administratorLogin": "[parameters('db_admin_login')]",
 				"administratorLoginPassword": "[parameters('db_admin_password')]",
 				"version": "12.0"
-			}
+            },
+            "resources": [
+                {
+                    "type": "firewallrules",
+                    "apiVersion": "2014-04-01",
+                    "dependsOn": [
+                      "[parameters('db_server')]"
+                    ],
+                    "location": "[resourceGroup().location]",
+                    "name": "AllowAllAzureIps",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "name": "[concat(parameters('db_server'), '/rule', copyIndex())]",
+            "copy": {
+                "name": "firewall",
+                "count": "[length(parameters('db_firewall'))]"
+            },
+            "apiVersion": "2014-04-01",
+            "dependsOn": [
+              "[parameters('db_server')]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "startIpAddress": "[parameters('db_firewall')[copyIndex()]]",
+                "endIpAddress": "[parameters('db_firewall')[copyIndex()]]"
+            }
         },
         {
             "type": "Microsoft.Sql/servers/elasticpools",
