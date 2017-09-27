@@ -2,20 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "site_name": {
-            "type": "String"
-        },
         "serviceplan_name": {
             "type": "String"
         },
-        "domain": {
-            "type": "String"
-        },
-        "certificatePfxBase64": {
-            "type": "securestring"
-        },
-        "certificatePfxPassword": {
-            "type": "securestring"
+        "sitesobject": {
+            "type": "secureObject"
         }
     },
     "variables": {},
@@ -36,7 +27,11 @@
         },
         {
             "type": "Microsoft.Web/sites",
-            "name": "[parameters('site_name')]",
+            "name": "[parameters('sitesobject').sites[copyIndex()].site_name]",
+            "copy": {
+                "name": "sites",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
             "apiVersion": "2016-08-01",
             "location": "[resourceGroup().location]",
             "scale": null,
@@ -50,7 +45,11 @@
         },
         {
             "type": "Microsoft.Web/sites/slots",
-            "name": "[concat(parameters('site_name'), '/staging')]",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/staging')]",
+            "copy": {
+                "name": "stagingslots",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
             "apiVersion": "2016-08-01",
             "location": "West Europe",
             "properties": {
@@ -58,13 +57,17 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('site_name'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]",
                 "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             ]
         },
         {
             "type": "Microsoft.Web/sites/slots",
-            "name": "[concat(parameters('site_name'), '/test')]",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/test')]",
+            "copy": {
+                "name": "testslots",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
             "apiVersion": "2016-08-01",
             "location": "West Europe",
             "properties": {
@@ -72,38 +75,46 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('site_name'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]",
                 "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             ]
         },
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
-            "name": "[concat(parameters('site_name'), '/', parameters('domain'))]",
+            "name": "[concat(parameters('sitesobject').sites[copyIndex()].site_name, '/', parameters('sitesobject').sites[copyIndex()].domain)]",
+            "copy": {
+                "name": "domains",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
             "apiVersion": "2016-08-01",
             "location": "[resourceGroup().location]",
             "properties": {
-                "siteName": "[parameters('site_name')]",
+                "siteName": "[parameters('sitesobject').sites[copyIndex()].site_name]",
                 "hostNameType": "Verified",
                 "customHostNameDnsRecordType": "CName",
                 "sslState": "SniEnabled",
-                "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', parameters('site_name')), providers('Microsoft.Web', 'certificates').apiVersions[0]).thumbprint]"
+                "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', parameters('sitesobject').sites[copyIndex()].site_name), providers('Microsoft.Web', 'certificates').apiVersions[0]).thumbprint]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('site_name'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]"
             ]
         },
         {
             "type":"Microsoft.Web/certificates",
-            "name":"[parameters('site_name')]",
+            "name":"[parameters('sitesobject').sites[copyIndex()].site_name]",
+            "copy": {
+                "name": "certificates",
+                "count": "[length(parameters('sitesobject').sites)]"
+            },
             "apiVersion":"2016-03-01",
             "location":"[resourceGroup().location]",
             "properties":{
-                "pfxBlob": "[parameters('certificatePfxBase64')]",
-                "password": "[parameters('certificatePfxPassword')]",
+                "pfxBlob": "[parameters('sitesobject').sites[copyIndex()].certificatePfxBase64]",
+                "password": "[parameters('sitesobject').sites[copyIndex()].certificatePfxPassword]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serviceplan_name'))]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('site_name'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('sitesobject').sites[copyIndex()].site_name)]"
             ]
         }
     ]

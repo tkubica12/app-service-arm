@@ -50,6 +50,9 @@ az group deployment create --resource-group appservicearm --template-file web4.j
 ## Refactor to support multiple sites (web06)
 We will be deploying multiple sites from single desired state template and we need to refactor. Parameters will be provided in a way to support multiple sites and we will use copy function in ARM to create multiple instances of resources.
 
+```
+az group deployment create --resource-group appservicearm --template-file web5.json --parameters @web5.parameters.json --mode Complete
+```
 
 
 ## Add SQL DB in elastic pool and push connection string to web site (web07)
