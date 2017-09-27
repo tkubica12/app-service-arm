@@ -11,6 +11,8 @@ az group deployment create --resource-group appservicearm --template-file web1.j
 ```
 
 ## Add custom domain (web02)
+Make sure you have CNAME configured in your DNS solution for your custom domain pointing to site URL such as tomasweb01.azurewebsites.net.
+
 ```
 az group deployment create --resource-group appservicearm --template-file web2.json --parameters @web2.parameters.json --mode Complete
 ```
@@ -46,6 +48,8 @@ az group deployment create --resource-group appservicearm --template-file web4.j
 ```
 
 ## Refactor to support multiple sites (web06)
+We will be deploying multiple sites from single desired state template and we need to refactor. Parameters will be provided in a way to support multiple sites and we will use copy function in ARM to create multiple instances of resources.
+
 
 
 ## Add SQL DB in elastic pool and push connection string to web site (web07)
