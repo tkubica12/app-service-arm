@@ -42,7 +42,7 @@ mkdir cert
 sudo openssl pkcs12 -inkey /etc/letsencrypt/live/tomasweb01.azure.tomaskubica.cz/privkey.pem -in /etc/letsencrypt/live/tomasweb01.azure.tomaskubica.cz/fullchain.pem -export -out cert/tomasweb01.pfx
 ```
 
-## Add deployment slots test and staging (web05)
+## Add deployment slots test and staging (web04)
 ```
 az group deployment create --resource-group appservicearm --template-file web4.json --parameters @web4.parameters.json --mode Complete
 ```
