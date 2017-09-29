@@ -76,4 +76,6 @@ If you want to alter users already existing (eg. if you need to change passwords
 ```
 
 ## Clean up
+```
 az group delete -n appservicearm -y 
+```
