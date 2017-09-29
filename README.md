@@ -55,14 +55,25 @@ az group deployment create --resource-group appservicearm --template-file web5.j
 ```
 
 
-## Add SQL DB in elastic pool and push connection string to web site (web07)
+## Add SQL DB in elastic pool and push connection string to web site (web06)
 Currently ARM does not support creating additional DB user accounts. Only user on DB server level is supported. In case of individual databases we could create individual DB server object for each site, but in out case we need to leverage elastic pools. Therefore we deploy database with master password and configure App Service with connection string with individual DB login as provided in parameters file. Actual creation of per-DB user login will be then handled by separate script outside of ARM template.
 
 ```
 az group deployment create --resource-group appservicearm --template-file web6.json --parameters @web6.parameters.json --mode Complete
 ```
 
-TODO: script to create DB passwords
+Make sure that in your template you have enabled source IP of station that will invoke user creation script on your SQL Server firewall. Then execute following PowerShell script that will use your parameters file from template to connect to each database via admin login and configure per-db users as defined in template file.
+
+Use this to create users and give them db_owner permissions in their DB. If user already exist, script will skip it (no update of password)
+```
+.\configureSQL.ps1 -ParamatersFile .\web6.parameters.json
+```
+
+If you want to alter users already existing (eg. if you need to change passwords) use -UpdateUsers flag
+
+```
+.\configureSQL.ps1 -ParamatersFile .\web6.parameters.json -UpdateUsers
+```
 
 ## Clean up
 az group delete -n appservicearm -y 
