@@ -1,4 +1,14 @@
 # Deploying web site on App Service with ARM
+- [Deploying web site on App Service with ARM](#deploying-web-site-on-app-service-with-arm)
+    - [Prepare Resource Group](#prepare-resource-group)
+    - [Deploy service plan + one site (web01)](#deploy-service-plan-one-site-web01)
+    - [Add custom domain (web02)](#add-custom-domain-web02)
+    - [Add certificate (web03)](#add-certificate-web03)
+        - [How to generate Let's encrypt certificate (in Linux)](#how-to-generate-lets-encrypt-certificate-in-linux)
+    - [Add deployment slots test and staging (web04)](#add-deployment-slots-test-and-staging-web04)
+    - [Refactor to support multiple sites (web05)](#refactor-to-support-multiple-sites-web05)
+    - [Add SQL DB in elastic pool and push connection string to web site (web06)](#add-sql-db-in-elastic-pool-and-push-connection-string-to-web-site-web06)
+    - [Clean up](#clean-up)
 
 ## Prepare Resource Group
 ```
